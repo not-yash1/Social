@@ -158,7 +158,8 @@ export const verifyUser = async (req, res) => {
     }
 
     // If otp matches
-    if(user.otp !== otp) {
+    let ot = Number(otp);
+    if(user.otp !== ot) {
         user.otpAttempts += 1;
         await user.save();
 
@@ -265,6 +266,7 @@ export const loginUser = async (req, res) => {
     if (!user) {
       return Response(res, 400, false, msg.userNotFoundMessage);
     }
+    console.log(user);
     if (user.lockUntil < Date.now()) {
       user.loginAttempts = 0;
       user.loginOtp = undefined;
@@ -280,10 +282,11 @@ export const loginUser = async (req, res) => {
       );
       await user.save();
 
-      return Response(res, 400, false, msg.loginLockeedMessage);
+      return Response(res, 400, false, msg.loginLockedMessage);
     }
 
     const isMatch = await user.matchPassword(password);
+    console.log(isMatch);
     if (!isMatch) {
       user.loginAttempts += 1;
       await user.save();
@@ -299,7 +302,7 @@ export const loginUser = async (req, res) => {
     user.loginOtp = otp;
     user.loginOtpExpire = otpExpire;
 
-    const subject = "Verify your account";
+    const subject = "Two step verification";
     // const body = `Your OTP is ${otp}`;
 
     emailTemplate = emailTemplate.replace("{{OTP_CODE}}", otp);
@@ -312,7 +315,7 @@ export const loginUser = async (req, res) => {
     await user.save();
 
     // send response
-    Response(res, 200, true, message.otpSendMessage);
+    Response(res, 200, true, msg.otpSendMessage);
   } catch (error) {
     //  Response(res, 500, false, error.message);
     return res.status(500).json({
@@ -326,7 +329,7 @@ export const LoginVerify = async (req, res) => {
   try {
     //parsing
     const { id } = req.params;
-    const { otp } = req.body;
+    let { otp } = req.body;
     //checking id
     if (!id) {
       return Response(res, 400, false, msg.idNotFoundMessage);
@@ -337,6 +340,7 @@ export const LoginVerify = async (req, res) => {
     if (!user) {
       return Response(res, 400, false, msg.userNotFoundMessage);
     }
+    // console.log(user);
 
     //checking lock to login
     if (user.lockUntil < Date.now()) {
@@ -367,7 +371,7 @@ export const LoginVerify = async (req, res) => {
     if (!otp) {
       user.otpAttempts += 1;
       await user.save();
-      return Response(res, 400, false, msg.OtpNotFoundMessage);
+      return Response(res, 400, false, msg.otpNotFoundMessage);
     }
     //checking expire time
     if (user.loginOtpExpire < Date.now()) {
@@ -377,7 +381,7 @@ export const LoginVerify = async (req, res) => {
       user.lockUntil = undefined;
       await user.save();
 
-      return Response(res, 400, false, msg.otpExpiresMessage);
+      return Response(res, 400, false, msg.otpExpiredMessage);
     }
 
     //matching the otp
@@ -386,7 +390,7 @@ export const LoginVerify = async (req, res) => {
       user.otpAttempts += 1;
       await user.save();
 
-      return Response(res, 401, false, message.invalidOtpMessage);
+      return Response(res, 401, false, msg.invalidOtpMessage);
     }
 
     //saving after the verification
@@ -410,7 +414,7 @@ export const LoginVerify = async (req, res) => {
     //sending response
     res.status(200).cookie("token", token, options).json({
       success: true,
-      message: message.userVerifiedMessage,
+      message: msg.userVerifiedMessage,
       data: user,
     });
   } catch (error) {
@@ -456,13 +460,13 @@ export const LoginOtpResend = async (req, res) => {
     await user.save();
 
     //send mail
-    const subject = "Verify your account";
+    const subject = "Two step verification";
 
     emailTemplate = emailTemplate.replace("{{OTP_CODE}}", otp);
     emailTemplate = emailTemplate.replaceAll("{{MAIL}}", process.env.SMTP_USER);
     emailTemplate = emailTemplate.replace("{{PORT}}", process.env.PORT);
     emailTemplate = emailTemplate.replace("{{USER_ID}}", user._id.toString());
-
+    const email=user.email;
     await sendEMail({ email, subject, html: emailTemplate });
 
     // send response

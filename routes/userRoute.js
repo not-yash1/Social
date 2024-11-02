@@ -8,5 +8,5 @@ userRouter.post("/verify/:id",verifyUser)
 userRouter.get("/resend/:id",resendOtp)
 userRouter.post("/login",loginUser)
 userRouter.post("/loginVerify/:id",LoginVerify)
-userRouter.get("/loginResend",LoginOtpResend)
+userRouter.get("/loginResend/:id",LoginOtpResend)
 export default userRouter; 

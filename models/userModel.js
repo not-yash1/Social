@@ -166,8 +166,8 @@ userSchema.methods.generateToken = async function () {
 };
 
 userSchema.methods.matchPassword = async function (Cpassword) {
-  const isMatch = await bcrypt.compare(this.password, Cpassword);
-  return isMatch;
+  return await bcrypt.compare(Cpassword,this.password);
+
 };
 const User = mongoose.model("User_Soc", userSchema);
 
