@@ -13,11 +13,11 @@ const userSchema = new mongoose.Schema(
     },
     lastName: {
       type: String,
-      required: true,
+      required: [true,"please add a last name"],
     },
     email: {
       type: String,
-      required: [true, "Plese add an emial"],
+      required: [true, "Plese add an email"],
       unique: true,
     },
     password: {
@@ -97,7 +97,7 @@ const userSchema = new mongoose.Schema(
     otpExpire: {
       type: Date,
     },
-    loginAttempts: {
+    loginOtpAttempts: {
       type: Number,
       default: 0,
     },
@@ -106,6 +106,9 @@ const userSchema = new mongoose.Schema(
     },
     loginOtpExpire: {
       type: Date,
+    },
+    loginOtpAttemptsExpire: {
+        type: Date
     },
     lockUntil: {
       type: Date,
